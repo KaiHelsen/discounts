@@ -9,19 +9,24 @@ use DateTime;
 
 class CustomerTest extends TestCase
 {
-    public function testSomething(): void
-    {
-        self::assertTrue(true);
-    }
-
     /**
      * test basic getter functions.
      * @throws \Exception
      */
     public function testGetters(): void
     {
-        $customer1 = new Customer(1, "foo", "2015-03-03", 1200.00);
-        $customer2 = new Customer(2, "bar", "2011-12-13", 2400.00);
+        $customer1 = new Customer(
+            1,
+            "foo",
+            DateTime::createFromFormat(Customer::DATETIME_FORMAT, "2015-03-03"),
+            1200.00
+        );
+        $customer2 = new Customer(
+            2,
+            "bar",
+            DateTime::createFromFormat(Customer::DATETIME_FORMAT, "2011-12-13"),
+            2400.00
+        );
 
         self::assertEquals(1, $customer1->getId(), "expected 1");
         self::assertEquals("foo", $customer1->getName(), "expected foo");
@@ -39,11 +44,11 @@ class CustomerTest extends TestCase
     public function testJsonConversion(): void
     {
         $customer = Customer::fromArray([
-            'id'=> "1",
-            "name"=>"foo",
-            "since"=> "2015-03-03",
+            'id' => "1",
+            "name" => "foo",
+            "since" => "2015-03-03",
             "revenue" => "1200.00",
-            ]);
+        ]);
 
         self::assertEquals(1, $customer->getId(), "expected 1");
         self::assertEquals("foo", $customer->getName(), "expected foo");
@@ -52,7 +57,7 @@ class CustomerTest extends TestCase
 
         $converted = $customer->jsonSerialize();
 
-        self::assertEquals(1, $converted[Customer::ID],"expected 1");
+        self::assertEquals(1, $converted[Customer::ID], "expected 1");
         self::assertEquals("foo", $converted[Customer::NAME], "expected foo");
         self::assertEquals("2015-03-03", $converted[Customer::SINCE], "expected 2015-03-03");
         self::assertEquals(1200.00, $converted[Customer::REVENUE], "expected 1200.00");

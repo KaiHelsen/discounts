@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model;
 
-
 use DateTime;
 use Exception;
 use JetBrains\PhpStorm\ArrayShape;
@@ -22,17 +21,14 @@ class Customer implements JsonSerializable
     public const NAME = 'name';
     public const SINCE = 'since';
     public const REVENUE = 'revenue';
-    private const DATETIME_FORMAT = "Y-m-d";
+    public const DATETIME_FORMAT = "Y-m-d";
     #endregion
 
-    /**
-     * @throws Exception
-     */
-    public function __construct(int $id, string $name, string $since, float $revenue)
+    public function __construct(int $id, string $name, DateTime $since, float $revenue)
     {
         $this->id = $id;
         $this->name = $name;
-        $this->since = DateTime::createFromFormat(self::DATETIME_FORMAT, $since);
+        $this->since = $since;
         $this->revenue = $revenue;
     }
 
@@ -76,16 +72,13 @@ class Customer implements JsonSerializable
         ];
     }
 
-    /**
-     * @throws Exception
-     */
     public static function fromArray(array $input): self
     {
         //TODO: validate input
         return new self(
             (int)$input[self::ID],
             $input[self::NAME],
-            $input[self::SINCE],
+            DateTime::createFromFormat(self::DATETIME_FORMAT, $input[self::SINCE]),
             (float)$input[self::REVENUE]
         );
     }

@@ -7,10 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 class ProductTest extends TestCase
 {
-    public function testSomething(): void
-    {
-        self::assertTrue(true);
-    }
 
     public function testGetters(): void
     {

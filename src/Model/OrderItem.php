@@ -4,32 +4,35 @@ declare(strict_types=1);
 namespace App\Model;
 
 
+use App\Model\Discount\IDiscount;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
 
-class OrderItem implements JsonSerializable
+class OrderItem implements JsonSerializable, IDiscountable
 {
     private Product $product;
     private int $quantity;
     private float $unitPrice;
     private float $totalPrice;
+    private float $discountedPrice;
     /**
      * @var IDiscount[]
      */
-    private array $discounts;
+    private array $discounts = [];
 
     private const ID = 'product-id';
     private const QUANTITY = 'quantity';
     private const UNIT_PRICE = 'unit-price';
     private const TOTAL_PRICE = 'total';
 
-    public function __construct(Product $product, int $quantity, float $unitPrice)
+    public function __construct(Product $product, int $quantity, float $unitPrice = -1)
     {
         $this->product = $product;
         $this->quantity = $quantity;
-        $this->unitPrice = $unitPrice;
-        $this->totalPrice = $unitPrice * $quantity;
+        $this->unitPrice = $unitPrice > 0 ? $unitPrice : $product->getPrice();
+        $this->totalPrice = $this->unitPrice * $quantity;
+
     }
 
     /**
@@ -68,18 +71,9 @@ class OrderItem implements JsonSerializable
         return $this->totalPrice;
     }
 
-    public function addDiscount(IDiscount $discount) : void
+    public function addDiscount(IDiscount $discount): void
     {
         $this->discounts[] = $discount;
-    }
-
-    public function calculateDiscountedTotalPrice(): float
-    {
-        $price = 0;
-        foreach($this->discounts as $discount)
-        {
-            $price += $discount->calculateDiscountedPrice($this->product, $this->quantity);
-        }
     }
 
     #[Pure]
@@ -102,5 +96,31 @@ class OrderItem implements JsonSerializable
             $input[self::QUANTITY],
             $input[self::UNIT_PRICE],
         );
+    }
+
+    public function applyDiscounts(): void
+    {
+        $this->discountedPrice = $this->totalPrice;
+        foreach ($this->discounts as $discount)
+        {
+            $this->discountedPrice -= $discount->calculateDiscountedPrice($this);
+        }
+    }
+
+    public function getDiscountedPrice(): float
+    {
+        $this->applyDiscounts();
+        return $this->discountedPrice;
+    }
+
+    #[Pure]
+    public function isCheaperThan(?OrderItem $item): bool
+    {
+        //we assume that if an item is null, it is more expensive than any real item
+        if ($item === null)
+        {
+            return true;
+        }
+        return $this->unitPrice < $item->getUnitPrice();
     }
 }

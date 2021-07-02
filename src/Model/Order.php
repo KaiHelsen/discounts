@@ -4,11 +4,13 @@ declare(strict_types=1);
 namespace App\Model;
 
 
+use App\Model\Discount\Discount;
+use App\Model\Discount\IDiscount;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
 
-class Order implements JsonSerializable
+class Order implements JsonSerializable, IDiscountable
 {
     private int $id;
     private Customer $customer;
@@ -21,6 +23,7 @@ class Order implements JsonSerializable
      */
     private array $discounts;
     private float $totalPrice;
+    private float $discountedPrice;
 
     private const ID = 'id';
     private const CUSTOMER_ID = 'customer-id';
@@ -35,14 +38,14 @@ class Order implements JsonSerializable
      * @param OrderItem[] $items
      * @param float $totalPrice
      */
-    public function __construct(int $id, Customer $customer, array $items, float $totalPrice)
+    public function __construct(int $id, Customer $customer, array $items)
     {
         $this->id = $id;
         $this->customer = $customer;
-        $this->items = [];
-        $this->items[] = $items;
+        $this->items = $items;
         $this->discounts = [];
-        $this->totalPrice = $totalPrice;
+
+        $this->calculatePrices();
     }
 
     /**
@@ -85,17 +88,65 @@ class Order implements JsonSerializable
         return $this->discounts;
     }
 
-    public function recalculateTotalPrice() : void
+    public function calculatePrices() : void
+    {
+        $this->calculateTotalPrice();
+        $this->applyDiscounts();
+    }
+
+    public function addDiscount(IDiscount $discount) : void
+    {
+        $this->discounts[] = $discount;
+    }
+
+    public function removeDiscount(IDiscount $discount) : void
+    {
+        foreach ($this->discounts as $i => $iValue)
+        {
+            if($iValue->equals($discount))
+            {
+                unset($this->discounts[$i]);
+            }
+        }
+    }
+
+    public function applyDiscounts(): void
+    {
+        $this->discountedPrice = 0;
+
+        $this->applyDiscountsToItems();
+
+        $this->applyDiscountsToSelf();
+    }
+
+    public function getDiscountedPrice(): float
+    {
+        $this->applyDiscounts();
+        return $this->discountedPrice;
+    }
+
+    public function getUnitPrice(): float
+    {
+        return $this->getDiscountedPrice();
+    }
+
+    public function getQuantity(): int
+    {
+        //there will always ever be only one order.
+        return 1;
+    }
+
+    private function calculateTotalPrice(): void
     {
         $totalPrice = 0;
-        foreach($this->items as $item)
+        foreach ($this->items as $item)
         {
             $totalPrice += $item->getTotalPrice();
         }
-        //TODO: apply discount(s) to order
         $this->totalPrice = $totalPrice;
     }
 
+    #region Serialization
     #[Pure]
     #[ArrayShape([self::ID => "int", self::CUSTOMER_ID => "int", self::ITEMS => "\App\Model\OrderItem[]|array", self::DISCOUNTS => "\App\Model\Discount[]|array", self::TOTAL_PRICE => "float"])]
     public function jsonSerialize() : array
@@ -109,7 +160,6 @@ class Order implements JsonSerializable
         ];
     }
 
-    #[Pure]
     public static function fromArray(array $input) : self
     {
         return new self(
@@ -118,5 +168,21 @@ class Order implements JsonSerializable
             $input[self::ITEMS],
             $input[self::TOTAL_PRICE],
         );
+    }
+    #endregion
+    private function applyDiscountsToItems(): void
+    {
+        foreach ($this->items as $item)
+        {
+            $this->discountedPrice += $item->getDiscountedPrice();
+        }
+    }
+
+    private function applyDiscountsToSelf(): void
+    {
+        foreach ($this->discounts as $discount)
+        {
+            $this->discountedPrice = $discount->calculateDiscountedPrice($this);
+        }
     }
 }

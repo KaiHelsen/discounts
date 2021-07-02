@@ -53,18 +53,5 @@ class Product
         return $this->price;
     }
 
-    #[Pure]
-    public static function findCheapestProduct(Product ...$products) : self
-    {
-        $cheapest = $products[0];
 
-        foreach($products as $product)
-        {
-            if($product->getPrice() < $cheapest->getPrice())
-            {
-                $cheapest = $product;
-            }
-        }
-        return $cheapest;
-    }
 }
