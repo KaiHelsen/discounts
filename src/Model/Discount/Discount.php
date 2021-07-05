@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace App\Model\Discount;
 
-use App\Model\Discount\IDiscount;
 use App\Model\IDiscountable;
 use JetBrains\PhpStorm\Immutable;
 use JetBrains\PhpStorm\Pure;
 
 #[Immutable]
-class Discount implements IDiscount
+class Discount
 {
     private float $discountValue;
     private int $type;

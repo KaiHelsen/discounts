@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Model;
 
 
-use App\Model\Discount\IDiscount;
+use App\Model\Discount\Discount;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
@@ -17,7 +17,7 @@ class OrderItem implements JsonSerializable, IDiscountable
     private float $totalPrice;
     private float $discountedPrice;
     /**
-     * @var IDiscount[]
+     * @var Discount[]
      */
     private array $discounts = [];
 
@@ -32,7 +32,6 @@ class OrderItem implements JsonSerializable, IDiscountable
         $this->quantity = $quantity;
         $this->unitPrice = $unitPrice > 0 ? $unitPrice : $product->getPrice();
         $this->totalPrice = $this->unitPrice * $quantity;
-
     }
 
     /**
@@ -71,7 +70,7 @@ class OrderItem implements JsonSerializable, IDiscountable
         return $this->totalPrice;
     }
 
-    public function addDiscount(IDiscount $discount): void
+    public function addDiscount(Discount $discount): void
     {
         $this->discounts[] = $discount;
     }
@@ -88,7 +87,6 @@ class OrderItem implements JsonSerializable, IDiscountable
         ];
     }
 
-    #[Pure]
     public static function fromArray(array $input): self
     {
         return new self(

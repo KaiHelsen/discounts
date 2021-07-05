@@ -5,6 +5,7 @@ namespace App\Model;
 
 
 use App\Model\Discount\Discount;
+use App\Model\ProviderCondition\ProviderCondition;
 use JetBrains\PhpStorm\Pure;
 
 class DiscountProvider
@@ -14,25 +15,32 @@ class DiscountProvider
     public const TOOLS = 1;
     public const SWITCHES = 2;
 
+    /**
+     * @var ProviderCondition[] $condition
+     */
+    private array $conditions = [];
+
     public function __construct()
     {
         //TODO: I'm sure there's stuff to do here
     }
 
-    public function calculateDiscounts(Order $order): void
+    public function addConditions(ProviderCondition $condition): void
     {
-        $this->giveCustomerDiscounts($order);
-
-        $this->giveOrderItemDiscounts($order);
+        $this->conditions[] = $condition;
     }
 
-    public function giveCustomerDiscounts(Order $order): void
+    public function getConditions(): array
     {
-
+        return $this->conditions;
     }
 
-    public function giveOrderItemDiscounts(Order $order): void
+    public function addDiscounts(Order $order): void
     {
-
+        foreach ($this->conditions as $condition)
+        {
+            $condition->Evaluate($order);
+        }
     }
+
 }

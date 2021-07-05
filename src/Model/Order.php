@@ -5,7 +5,6 @@ namespace App\Model;
 
 
 use App\Model\Discount\Discount;
-use App\Model\Discount\IDiscount;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
@@ -94,12 +93,12 @@ class Order implements JsonSerializable, IDiscountable
         $this->applyDiscounts();
     }
 
-    public function addDiscount(IDiscount $discount) : void
+    public function addDiscount(Discount $discount) : void
     {
         $this->discounts[] = $discount;
     }
 
-    public function removeDiscount(IDiscount $discount) : void
+    public function removeDiscount(Discount $discount) : void
     {
         foreach ($this->discounts as $i => $iValue)
         {
@@ -166,7 +165,6 @@ class Order implements JsonSerializable, IDiscountable
             $input[self::ID],
             $input[self::CUSTOMER_ID],
             $input[self::ITEMS],
-            $input[self::TOTAL_PRICE],
         );
     }
     #endregion
