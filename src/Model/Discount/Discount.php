@@ -12,6 +12,7 @@ class Discount
 {
     private float $discountValue;
     private int $type;
+    private string $description;
 
     private const FIXED = 1;
     private const FIXED_DESCRIPTION = 'fixed discount';
@@ -21,25 +22,25 @@ class Discount
     private const ONE_FREE_DESCRIPTION = 'one for free discount';
 
 
-    private function __construct(float $discount, int $type = self::VARIABLE)
+    private function __construct(float $discount, string $description = "", int $type = self::VARIABLE)
     {
         $this->discountValue = $discount;
         $this->type = $type;
     }
 
-    #[Pure] public static function newVariableDiscount(float $percentage): Discount
+    #[Pure] public static function newVariableDiscount(float $percentage, string $description = ""): Discount
     {
-        return new Discount($percentage, self::VARIABLE);
+        return new Discount($percentage, $description = "", self::VARIABLE);
     }
 
-    #[Pure] public static function newGetOneFreeDiscount(int $oneFor): Discount
+    #[Pure] public static function newGetOneFreeDiscount(int $oneFor, string $description = ""): Discount
     {
-        return new Discount($oneFor, self::ONE_FREE);
+        return new Discount($oneFor, $description = "",self::ONE_FREE);
     }
 
-    #[Pure] public static function newFixedDiscount(float $fixedDiscount): Discount
+    #[Pure] public static function newFixedDiscount(float $fixedDiscount, string $description = ""): Discount
     {
-        return new Discount($fixedDiscount, self::FIXED);
+        return new Discount($fixedDiscount, $description = "", self::FIXED);
     }
 
     /**
@@ -63,16 +64,12 @@ class Discount
     #[Pure]
     public function calculateDiscountedPrice(IDiscountable $item): float
     {
-        switch ($this->type)
+        return match ($this->type)
         {
-            case(self::FIXED):
-            default:
-                return $this->calculateFixedDiscount();
-            case(self::VARIABLE):
-                return $this->calculateVariableDiscount($item->getUnitPrice() * $item->getQuantity());
-            case(self::ONE_FREE):
-                return $this->calculateOneFreeDiscount($item->getUnitPrice(), $item->getQuantity());
-        }
+            default => $this->calculateFixedDiscount(),
+            self::VARIABLE => $this->calculateVariableDiscount($item->getUnitPrice() * $item->getQuantity()),
+            self::ONE_FREE => $this->calculateOneFreeDiscount($item->getUnitPrice(), $item->getQuantity()),
+        };
     }
 
     #[Pure]

@@ -35,7 +35,6 @@ class Order implements JsonSerializable, IDiscountable
      * @param int $id
      * @param Customer $customer
      * @param OrderItem[] $items
-     * @param float $totalPrice
      */
     public function __construct(int $id, Customer $customer, array $items)
     {
@@ -45,6 +44,27 @@ class Order implements JsonSerializable, IDiscountable
         $this->discounts = [];
 
         $this->calculatePrices();
+    }
+
+    /**
+     * @param $input
+     * @param Product[] $products
+     * @return array
+     */
+    private static function generateItems($input, array $products): array
+    {
+        $items = [];
+        foreach ($input as $item)
+        {
+            foreach ($products as $product)
+            {
+                if ($item['id'] === $product->getId())
+                {
+                    $items[] = new OrderItem($product, $item['quantity'], $item['unit-price']);
+                }
+            }
+        }
+        return $items;
     }
 
     /**
@@ -87,22 +107,22 @@ class Order implements JsonSerializable, IDiscountable
         return $this->discounts;
     }
 
-    public function calculatePrices() : void
+    public function calculatePrices(): void
     {
         $this->calculateTotalPrice();
         $this->applyDiscounts();
     }
 
-    public function addDiscount(Discount $discount) : void
+    public function addDiscount(Discount $discount): void
     {
         $this->discounts[] = $discount;
     }
 
-    public function removeDiscount(Discount $discount) : void
+    public function removeDiscount(Discount $discount): void
     {
         foreach ($this->discounts as $i => $iValue)
         {
-            if($iValue->equals($discount))
+            if ($iValue->equals($discount))
             {
                 unset($this->discounts[$i]);
             }
@@ -148,7 +168,7 @@ class Order implements JsonSerializable, IDiscountable
     #region Serialization
     #[Pure]
     #[ArrayShape([self::ID => "int", self::CUSTOMER_ID => "int", self::ITEMS => "\App\Model\OrderItem[]|array", self::DISCOUNTS => "\App\Model\Discount[]|array", self::TOTAL_PRICE => "float"])]
-    public function jsonSerialize() : array
+    public function jsonSerialize(): array
     {
         return [
             self::ID => $this->id,
@@ -159,14 +179,24 @@ class Order implements JsonSerializable, IDiscountable
         ];
     }
 
-    public static function fromArray(array $input) : self
+    /**
+     * @param array $input
+     * @param Product[] $products
+     * @param Customer[] $customers
+     * @return static
+     */
+    public static function fromArray(array $input, array $products, array $customers): self
     {
+        $items = self::generateItems($input[self::ITEMS], $products);
+
+        $customer = self::findCustomer($customers, $input[self::CUSTOMER_ID]);
         return new self(
             $input[self::ID],
             $input[self::CUSTOMER_ID],
-            $input[self::ITEMS],
+            $items,
         );
     }
+
     #endregion
     private function applyDiscountsToItems(): void
     {
@@ -176,11 +206,30 @@ class Order implements JsonSerializable, IDiscountable
         }
     }
 
+
     private function applyDiscountsToSelf(): void
     {
+        $this->discountedPrice = $this->totalPrice;
         foreach ($this->discounts as $discount)
         {
-            $this->discountedPrice = $discount->calculateDiscountedPrice($this);
+            $this->discountedPrice -= $discount->calculateDiscountedPrice($this);
+        }
+    }
+
+    /**
+     * @param Customer[] $customers
+     * @param int $customerId
+     * @return Customer
+     */
+    #[Pure]
+    private static function findCustomer(array $customers, int $customerId): Customer
+    {
+        foreach ($customers as $customer)
+        {
+            if ($customer->getId() === $customerId)
+            {
+                return $customer;
+            }
         }
     }
 }

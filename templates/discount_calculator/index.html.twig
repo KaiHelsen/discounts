@@ -15,6 +15,20 @@
     <ul>
         <li>Your controller at <code><a href="{{ '/var/www/discounts/src/Controller/DiscountCalculatorController.php'|file_link(0) }}">src/Controller/DiscountCalculatorController.php</a></code></li>
         <li>Your template at <code><a href="{{ '/var/www/discounts/templates/discount_calculator/index.html.twig'|file_link(0) }}">templates/discount_calculator/index.html.twig</a></code></li>
+        <li>
+            <ul>
+                {% for customer in customers %}
+                    <li>{{ customer.getName() }}</li>
+                {% endfor %}
+            </ul>
+        </li>
+        <li>
+            <ul>
+                {% for product in products %}
+                    <li>{{ product.getDescription() }}</li>
+                {% endfor %}
+            </ul>
+        </li>
     </ul>
 </div>
 {% endblock %}

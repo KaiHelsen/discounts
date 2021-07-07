@@ -9,7 +9,7 @@ use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use JsonSerializable;
 
-class Customer implements JsonSerializable
+class Customer implements JsonSerializable, JsonDecodeable
 {
     private int $id;
     private string $name;

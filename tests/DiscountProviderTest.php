@@ -12,5 +12,6 @@ class DiscountProviderTest extends TestCase
     public function testDiscountProvider(): void
     {
         $provider = new DiscountProvider();
+        self::assertTrue(true);
     }
 }
